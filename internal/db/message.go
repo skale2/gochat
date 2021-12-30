@@ -27,20 +27,22 @@ var (
 	WHERE Receipient = ? AND Sender = ?`
 
 	getThreadMessagesStmt = `
-	SELECT Time, Content, Sender, Receipient, Read
+	SELECT Id, Time, Content, Sender, Receipient, Read
 	FROM Messages 
 	WHERE Receipient = ? AND Sender = ?
-	ORDER BY Time DESC`
+	ORDER BY Time DESC
+	LIMIT ? OFFSET ?`
 
 	getThreadsStmt = `
 	SELECT MAX(Time), Sender, SUM(Read)
 	FROM Messages 
 	WHERE Receipient = ?
 	GROUP BY Sender
-	ORDER BY Time DESC`
+	ORDER BY Time DESC
+	LIMIT ? OFFSET ?`
 
 	getUnreadMessagesStmt = `
-	SELECT Time, Content, Sender, Receipient, Read
+	SELECT Id, Time, Content, Sender, Receipient, Read
 	FROM Messages 
 	WHERE Receipient = ? AND Read = FALSE
 	ORDER BY Time DESC`
@@ -56,13 +58,13 @@ func ReadThread(receipient, sender model.Username) error {
 	return err
 }
 
-func GetThreads(receipient model.Username) ([]*model.Thread, error) {
-	rows, err := db.Query(getThreadsStmt, receipient)
+func ListThreads(receipient model.Username, limit, offset int) ([]*model.Thread, error) {
+	rows, err := db.Query(getThreadsStmt, receipient, limit, offset)
 	return retrieveThreadRows(rows, err)
 }
 
-func GetThreadMessages(receipient, sender model.Username) ([]*model.Message, error) {
-	rows, err := db.Query(getThreadMessagesStmt, receipient, sender)
+func ListThreadMessages(receipient, sender model.Username, limit, offset int) ([]*model.Message, error) {
+	rows, err := db.Query(getThreadMessagesStmt, receipient, sender, limit, offset)
 	return retrieveMessageRows(rows, err)
 }
 
